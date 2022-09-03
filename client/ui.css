@@ -1,4 +1,4 @@
-/* Copyright 2013, 2014, 2015, 2016, 2017 Kevin Reid <kpreid@switchb.org>
+/* Copyright 2013, 2014, 2015, 2016, 2017 Kevin Reid and the ShinySDR contributors
  * 
  * This file is part of ShinySDR.
  * 
@@ -25,29 +25,43 @@ html.pane-structured-page, .pane-structured-page body {
   height: 100%;
 }
 
-/* loading screen */
-#loading-information-dialog {
-  display: none;
+/* loading screen and other dialogs */
+#loading-information-dialog, .unspecific-modal-dialog, .menu-dialog {
+  border: none;
+  box-shadow: 0 0.1em 1em 0.1em rgba(0, 0, 0, 0.25);
 }
-.main-not-yet-run #loading-information-dialog {
+#loading-information-dialog, .unspecific-modal-dialog {
   display: block; /* cancel out previous display: none */
   
+  /* better layout for browsers not supporting <dialog> basics */
   top: 0; right: 0; bottom: 0; left: 0;
   
   width: 30em;
-  height: 10em;
   box-sizing: border-box;
   max-width: 100%;
   max-height: 100%;
   
+}
+/* pop-up menus (which are <dialog> elements, but don't get "big and centered on screen" styles like .unspecific-modal-dialog) */
+.menu-dialog {
+  margin: 0;
+  padding: 0.25em;
+  left: 0; right: 0;
+}
+#loading-information-dialog {
+  display: none;
+  height: 10em;
   overflow: auto;
+}
+.main-not-yet-run #loading-information-dialog {
+  display: block; /* cancel out previous display: none */
 }
 #loading-information-dialog progress {
   margin: 0;
   box-sizing: border-box;
   width: 100%;
 }
-.main-not-yet-run.pane-structured-body > shinysdr-pane {
+.main-not-yet-run.pane-structured-body > :not(#loading-information-dialog) {
   /* hide unfinished UI (but still allow it to layout, i.e. avoid display: none) */
   visibility: hidden;
 }
@@ -60,24 +74,14 @@ html.pane-structured-page, .pane-structured-page body {
   justify-content: center;
   
   /* This background color shows up only where there is no pane to fill the space. */
-  background: #333;
-  background-image: linear-gradient(45deg, #2F2F2F 26%, #333 26%, #333 51%, #2F2F2F 51%, #2F2F2F 76%, #333 76%);
-  background-size: 1em 1em;
+  background: var(--shinysdr-theme-empty-bgcolor);
+  background-image: var(--shinysdr-theme-empty-bgfill);
+  background-size: 10px 10px;  /* TODO this belongs in the theme, can we generalize without a pile of variables? */
   color: white;
 }
 shinysdr-pane {
   background: var(--shinysdr-theme-column-bgfill);
   color: var(--shinysdr-theme-foreground);
-}
-.pane-structured-body > shinysdr-pane {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
-  height: 100%; /* doesn't change layout height, but enables percentage height to work inside */
-}
-.pane-structured-body > shinysdr-pane.stretchy {
-  flex: 1 2;
-  width: 1px;  /* This width is not actually wanted, but leaving it unset or auto causes sized content such as in the spectrum pane to overrun the intended flexible width. It is 1px because it will act as a minimum width. */
 }
 shinysdr-pane > h2 {
   font-size: 100%;
@@ -131,11 +135,55 @@ shinysdr-pane > h2 {
   /* TODO: should probably use flexbox, not float */
   float: right;
 }
+.pane-hide-button {
+  border: none;
+  background: none;
+  margin: -0.2em;
+  padding: 0.2em;
+}
+
+/* pane-structured-body vertical scrolling management. */
+.pane-structured-body > * {
+  /* Assume it's a container of stacked panes, scroll the stack. */
+  overflow-y: auto;
+}
+.pane-structured-body > shinysdr-pane {
+  /* Override: it's an entire pane, so don't scroll it... */
+  overflow-y: hidden;
+}
+.pane-structured-body > shinysdr-pane > * {
+  /* ...instead scroll its contents. */
+  overflow-y: auto;
+}
+
+/* pane horizontal sizing and layout details */
+shinysdr-pane {
+  display: flex;
+  flex-direction: column;
+
+  flex: 0 1 auto;
+  height: auto;
+}
+.pane-type-mini {
+  flex: 0 1 auto;
+  width: 10em;
+}
+.pane-type-sidebar {
+  flex: 0 1 auto;
+  width: 18em;
+}
+.pane-type-stretchy {
+  flex: 1 2;
+  width: 1px;  /* This width is not actually wanted, but leaving it unset or auto causes sized content such as in the spectrum pane to overrun the intended flexible width. It is 1px because it will act as a minimum width. */
+}
+.pane-structured-body > shinysdr-pane {
+  height: 100%; /* doesn't change layout height, but enables percentage height to work inside */
+}
+.pane-content-also-vertical-stretch {  /* TODO better name for this class */
+  flex: 1 1 auto;
+}
 
 /* left sidebar menu which contains window show-buttons and links */
-#section-system-menu .sidebar {
-  width: 10em;  /* override default sidebar width */
-}
 ul.system-menu-list, .system-menu-list ul { /* TODO doesn't fit here, is styling for side menu */
   margin: 0;
   padding: 0;
@@ -175,24 +223,7 @@ ul.system-menu-list, .system-menu-list ul { /* TODO doesn't fit here, is styling
   background: rgba(255, 255, 255, 0.4);
 }
 
-/* pop-up menus (which are <dialog> elements) */
-.menu-dialog {
-  margin: 0;
-  border: none;
-  padding: 0.25em;
-  
-  left: 0; right: 0;
-  
-  box-shadow: 0 0.1em 1em 0.1em rgba(0, 0, 0, 0.25);
-}
-
 /* widgets */
-.sidebar {
-  flex: 1 1 auto;
-  height: auto;
-  width: 18em;
-  overflow-y: auto;
-}
 .frame {
   display: flex;
   flex-direction: column;
@@ -213,6 +244,9 @@ ul.system-menu-list, .system-menu-list ul { /* TODO doesn't fit here, is styling
 }
 .frame-controls {
   margin-bottom: -0.2em; /* collapse margin with following frame */
+}
+summary.frame-controls:not([open]) {
+  margin-bottom: 0;  /* override collapsing when the frame isn't visible */
 }
 .panel.frame {
   margin-top: 0.2em;
